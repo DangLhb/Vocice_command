@@ -5,6 +5,5 @@
 .global uCYModel2End
 //ban 1 tu
 uCYModel2Begin:
-.incbin "../src/Model/hey_megkel_pack.bin"
+.incbin "../src/Model/hey_megkel_pack_WithTxtAndTriAndMapID.bin"
 uCYModel2End:
-
