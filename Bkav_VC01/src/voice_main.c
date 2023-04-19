@@ -82,8 +82,8 @@
 #define VOLUME_SCALE_VOICE_TAG   800                     // The AGC volume scale percentage for record voice tag (near field).
 #define GROUP_INDEX_TRIGGER      0                       // The group index of trigger.
 #define GROUP_INDEX_COMMAND      1                       // The group index of command.
-#define COMMAND_STAGE_TIME_MIN   6000                    // When no result at command recognition stage, the minimum recording time in ms.
-#define COMMAND_STAGE_TIME_MAX   6000                    // When no result at command recognition stage, the maximum recording time in ms.
+#define COMMAND_STAGE_TIME_MIN   15000                    // When no result at command recognition stage, the minimum recording time in ms.
+#define COMMAND_STAGE_TIME_MAX   17000                    // When no result at command recognition stage, the maximum recording time in ms.
 #define COMMAND_STAGE_TIME_MIN_CMD  20000
 #define COMMAND_STAGE_TIME_MAX_CMD  20000
 #define VOICE_TAG_VOICE_SIZE     12000                   // According SDK document, voice tag length can be 3000*12/16 ms.
@@ -145,8 +145,8 @@ static BYTE     g_byaDSpotterMem2[DSPOTTER_MEM_SIZE_2];     // The memory for DS
 static HANDLE   g_hCybModel2 = NULL;
 static BYTE     g_byaCybModelMem2[CYBMODEL_GET_MEM_USAGE()];// The memory for g_hCybModel2 engine.
 static status_command_t stt_BKAV = UNKNOWN;      // sonvhc-bkav declare
-static int COMMAND_STAGE_TIME_MIN_Bkav = 6000;
-static int COMMAND_STAGE_TIME_MAX_Bkav = 6000;
+static int COMMAND_STAGE_TIME_MIN_Bkav = 15000;
+static int COMMAND_STAGE_TIME_MAX_Bkav = 17000;
 
 #endif
 
@@ -547,8 +547,8 @@ L_RCOGNIZE:
                         /*tren 160: hây méc ken*/
                         if (nMapID<130 || (160<=nMapID && nMapID <= 179) ){
                             if(nCmdSGDiff >= 10 && nCmdEnergy >= 999){
-                                COMMAND_STAGE_TIME_MIN_Bkav   = 6000;
-                                COMMAND_STAGE_TIME_MAX_Bkav   = 6000;
+                                COMMAND_STAGE_TIME_MIN_Bkav   = 15000;
+                                COMMAND_STAGE_TIME_MAX_Bkav   = 17000;
                                 s_nCommandRecordSample = 0;
                                 stt_BKAV = WAKEUP;
                             }
@@ -565,14 +565,17 @@ L_RCOGNIZE:
                     /*130->139: len*/
                         else if(130<=nMapID && nMapID <= 139 ){
                            if(nCmdSGDiff >= 10 && nCmdEnergy >= 999){
-                               if( stt_BKAV != UP && stt_BKAV != DOWN  ){
+                               // if( stt_BKAV != UP && stt_BKAV != DOWN  ){
+                                if(stt_BKAV != UP){
                                              R_SCI_UART_Write(&cmd_uart_ctrl, cmd_stop, sizeof(cmd_stop));
-                                             R_BSP_SoftwareDelay(5U, BSP_DELAY_UNITS_MILLISECONDS);
+//                                             R_BSP_SoftwareDelay(5U, BSP_DELAY_UNITS_MILLISECONDS);
+                                             R_BSP_SoftwareDelay(200U, BSP_DELAY_UNITS_MILLISECONDS);
                                              R_SCI_UART_Write(&cmd_uart_ctrl, cmd_up, sizeof(cmd_up));
                                              stt_BKAV=UP;
                                              DBG_UART_TRACE("-----LEN------ ");
-                                             COMMAND_STAGE_TIME_MAX_Bkav   = 17000;
+                                             COMMAND_STAGE_TIME_MAX_Bkav   = 15000;
                                              COMMAND_STAGE_TIME_MIN_Bkav   = 17000;
+                                             s_nCommandRecordSample = 0;
                                }
                                else{
                                       nMapID=-1;               //no answer.
@@ -586,14 +589,16 @@ L_RCOGNIZE:
                        /*140->149: xuong*/
                         else if(140<=nMapID && nMapID <= 149){
                                if(nCmdSGDiff >= 15 && nCmdEnergy >= 999 && nCmdScore >= 30 ){
-                                   if(stt_BKAV != UP && stt_BKAV != DOWN){
+                                   // if(stt_BKAV != UP && stt_BKAV != DOWN){
+                                    if(stt_BKAV != DOWN){
                                             R_SCI_UART_Write(&cmd_uart_ctrl, cmd_stop, sizeof(cmd_stop));
-                                            R_BSP_SoftwareDelay(5U, BSP_DELAY_UNITS_MILLISECONDS);
+                                            R_BSP_SoftwareDelay(200U, BSP_DELAY_UNITS_MILLISECONDS);
                                             R_SCI_UART_Write(&cmd_uart_ctrl, cmd_down, sizeof(cmd_down));
                                             stt_BKAV=DOWN;
                                             DBG_UART_TRACE("-----XUONG------ ");
-                                            COMMAND_STAGE_TIME_MAX_Bkav   = 12000;
-                                            COMMAND_STAGE_TIME_MIN_Bkav   = 12000;
+                                            COMMAND_STAGE_TIME_MAX_Bkav   = 15000;
+                                            COMMAND_STAGE_TIME_MIN_Bkav   = 17000;
+                                            s_nCommandRecordSample = 0;
                                    }
                                    else{
                                            nMapID=-1;               // no answer
@@ -609,7 +614,10 @@ L_RCOGNIZE:
                                      {
                                          DBG_UART_TRACE("-----DUNG------ ");
                                          R_SCI_UART_Write(&cmd_uart_ctrl, cmd_stop, sizeof(cmd_stop));
-                                         s_nCommandRecordSample = 1000000000;             // timeout
+                                         // s_nCommandRecordSample = 1000000000;             // timeout
+                                         COMMAND_STAGE_TIME_MIN_Bkav   = 15000;
+                                         COMMAND_STAGE_TIME_MAX_Bkav   = 17000;
+                                         s_nCommandRecordSample = 0;
                                          stt_BKAV=STOP;
                                      }
                                      else
@@ -694,8 +702,8 @@ L_RCOGNIZE:
         #endif
             ToggleYellowLED();  //RESG
 
-             COMMAND_STAGE_TIME_MAX_Bkav   = 6000   ;
-             COMMAND_STAGE_TIME_MIN_Bkav   = 6000   ;
+             COMMAND_STAGE_TIME_MAX_Bkav   = 15000   ;
+             COMMAND_STAGE_TIME_MIN_Bkav   = 17000   ;
              stt_BKAV=STOP;                      //timeout
              s_nCommandRecordSample = 0;         //------
         }
