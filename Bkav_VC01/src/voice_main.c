@@ -97,7 +97,7 @@ static const uint8_t cmd_stop[] = {0x57,
                                    0xF2};//4bytes
 static const uint8_t cmd_up[] = {0x57,
                                  0x88,
-                                 0x11,
+                                 0x10,
                                  0xEF};//4 bytes
 static const uint8_t cmd_down[] = {0x57,
                                    0x88,
@@ -566,8 +566,8 @@ L_RCOGNIZE:
                         else if(130<=nMapID && nMapID <= 139 ){
                            if(nCmdSGDiff >= 10 && nCmdEnergy >= 999){
                                // if( stt_BKAV != UP && stt_BKAV != DOWN  ){
-                                if(stt_BKAV != UP){
-                                             R_SCI_UART_Write(&cmd_uart_ctrl, cmd_stop, sizeof(cmd_stop));
+//                                if(stt_BKAV != UP){
+//                                             R_SCI_UART_Write(&cmd_uart_ctrl, cmd_stop, sizeof(cmd_stop));
 //                                             R_BSP_SoftwareDelay(5U, BSP_DELAY_UNITS_MILLISECONDS);
                                              R_BSP_SoftwareDelay(200U, BSP_DELAY_UNITS_MILLISECONDS);
                                              R_SCI_UART_Write(&cmd_uart_ctrl, cmd_up, sizeof(cmd_up));
@@ -575,11 +575,11 @@ L_RCOGNIZE:
                                              DBG_UART_TRACE("-----LEN------ ");
                                              COMMAND_STAGE_TIME_MAX_Bkav   = 15000;
                                              COMMAND_STAGE_TIME_MIN_Bkav   = 17000;
-                                             s_nCommandRecordSample = 0;
-                               }
-                               else{
-                                      nMapID=-1;               //no answer.
-                               }
+//                                             s_nCommandRecordSample = 0;
+//                               }
+//                               else{
+//                                      nMapID=-1;               //no answer.
+//                               }
 
                            }
                            else  nMapID=-1;
@@ -590,19 +590,19 @@ L_RCOGNIZE:
                         else if(140<=nMapID && nMapID <= 149){
                                if(nCmdSGDiff >= 15 && nCmdEnergy >= 999 && nCmdScore >= 30 ){
                                    // if(stt_BKAV != UP && stt_BKAV != DOWN){
-                                    if(stt_BKAV != DOWN){
-                                            R_SCI_UART_Write(&cmd_uart_ctrl, cmd_stop, sizeof(cmd_stop));
+//                                    if(stt_BKAV != DOWN){
+//                                            R_SCI_UART_Write(&cmd_uart_ctrl, cmd_stop, sizeof(cmd_stop));
                                             R_BSP_SoftwareDelay(200U, BSP_DELAY_UNITS_MILLISECONDS);
                                             R_SCI_UART_Write(&cmd_uart_ctrl, cmd_down, sizeof(cmd_down));
                                             stt_BKAV=DOWN;
                                             DBG_UART_TRACE("-----XUONG------ ");
                                             COMMAND_STAGE_TIME_MAX_Bkav   = 15000;
                                             COMMAND_STAGE_TIME_MIN_Bkav   = 17000;
-                                            s_nCommandRecordSample = 0;
-                                   }
-                                   else{
-                                           nMapID=-1;               // no answer
-                                   }
+//                                            s_nCommandRecordSample = 0;
+//                                   }
+//                                   else{
+//                                           nMapID=-1;               // no answer
+//                                   }
                                }
                                else nMapID=-1;
                            }
@@ -617,7 +617,7 @@ L_RCOGNIZE:
                                          // s_nCommandRecordSample = 1000000000;             // timeout
                                          COMMAND_STAGE_TIME_MIN_Bkav   = 15000;
                                          COMMAND_STAGE_TIME_MAX_Bkav   = 17000;
-                                         s_nCommandRecordSample = 0;
+//                                         s_nCommandRecordSample = 0;
                                          stt_BKAV=STOP;
                                      }
                                      else
@@ -694,7 +694,24 @@ L_RCOGNIZE:
             //return true; //sonvhc
             DBG_UART_TRACE("Timeout for command stage, switch to trigger stage.\r\n");
             //s_nCommandRecognizeLimit = COMMAND_STAGE_TIME_MIN;  // COMMAND_STAGE_TIME_MIN =6000
-
+/********************BHSE DangLHb add****************************/
+#ifdef SUPPORT_SPEEX_PLAY
+        const BYTE *pbySpeexDataBegin = (const BYTE *)&g_uSpeexData1Begin;
+        g_bSkipRecordData = TRUE; // Skip record data to avoid data lost or DSpotter recognize it again.
+        PlaySpeexStart();
+    #ifdef SUPPORT_RECOG_TWO_MODEL
+//      if (nRet2 == DSPOTTER_SUCCESS)
+            pbySpeexDataBegin = (const BYTE *)&g_uSpeexData2Begin;
+    #endif
+        int nMapID = 101;
+        if (!PlaySpeexMapID(pbySpeexDataBegin, nMapID))
+            DBG_UART_TRACE("Fail to play Speex by MapID(%d).\r\n", nMapID);
+        PlaySpeexStop();
+        g_bSkipRecordData = FALSE;
+        nMapID = -1;
+     //----------------BKAV------------------
+#endif
+/****************************************************************/
 
             SetDSpotter(g_hCybModel1, GROUP_INDEX_TRIGGER, g_byaDSpotterMem1, sizeof(g_byaDSpotterMem1), &g_hDSpotter1);
         #ifdef SUPPORT_RECOG_TWO_MODEL
